@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}상품 검색 결과{% endblock %}
+{% block content %}
+ <h2>'{{ keyword }}' 검색 결과</h2>
+
+ <form action="{{ url_for('search_product') }}" method="GET">
+     <input type="text" name="keyword" placeholder="검색어를 입력하세요" value="{{ keyword }}">
+     <button type="submit">검색</button>
+ </form>
+
+ {% if products %}
+     <div class="product-grid">
+         {% for product in products %}
+             <div class="product-item">
+                 <a href="{{ url_for('view_product', product_id=product.id) }}">
+                     <img src="https://via.placeholder.com/150" alt="{{ product.title }}">
+                     <h3>{{ product.title }}</h3>
+                     <p class="price">가격: {{ product.price }}</p>
+                     <p class="description">{{ product.description | truncate(100) }}</p>
+                 </a>
+             </div>
+         {% endfor %}
+     </div>
+ {% else %}
+     <p class="no-result">검색 결과가 없습니다.</p>
+ {% endif %}
+
+ <style>
+     /* 추가 스타일 */
+     .product-grid {
+         display: grid;
+         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+         gap: 20px;
+         margin-top: 20px;
+     }
+     .product-item {
+         border: 1px solid #ddd;
+         padding: 10px;
+         text-align: center;
+     }
+     .product-item img {
+         max-width: 100%;
+         height: auto;
+     }
+     .product-item h3 {
+         margin-top: 10px;
+         font-size: 1.2em;
+     }
+     .price {
+         color: #888;
+         font-size: 0.9em;
+     }
+     .description {
+         font-size: 0.95em;
+         color: #666;
+     }
+     .no-result {
+         font-style: italic;
+         color: #888;
+     }
+ </style>
+{% endblock %}

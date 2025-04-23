@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>관리자 페이지</title>
+ <style>
+     body {
+         font-family: Arial, sans-serif;
+         margin: 20px;
+     }
+     h1 {
+         text-align: center;
+         color: #333;
+     }
+     h2 {
+         border-bottom: 2px solid #666;
+         padding-bottom: 5px;
+         margin-top: 20px;
+     }
+     table {
+         width: 100%;
+         border-collapse: collapse;
+         margin-top: 10px;
+     }
+     th, td {
+         border: 1px solid #ddd;
+         padding: 8px;
+         text-align: left;
+     }
+     th {
+         background-color: #f2f2f2;
+     }
+     tr:nth-child(even) {
+         background-color: #f9f9f9;
+     }
+     p {
+         font-style: italic;
+         color: #888;
+     }
+     a {
+         display: block;
+         text-align: center;
+         margin-top: 20px;
+         color: #007BFF;
+         text-decoration: none;
+     }
+     a:hover {
+         text-decoration: underline;
+     }
+ </style>
+</head>
+<body>
+ <h1>관리자 페이지</h1>
+
+ <h2>사용자 목록</h2>
+ {% if users %}
+     <table>
+         <thead>
+             <tr>
+                 <th>ID</th>
+                 <th>Username</th>
+                 <th>Bio</th>
+                 <th>Is Admin</th>
+             </tr>
+         </thead>
+         <tbody>
+             {% for user in users %}
+                 <tr>
+                     <td>{{ user.id }}</td>
+                     <td>{{ user.username }}</td>
+                     <td>{{ user.bio }}</td>
+                     <td>{{ user.is_admin }}</td>
+                 </tr>
+             {% endfor %}
+         </tbody>
+     </table>
+ {% else %}
+     <p>사용자가 없습니다.</p>
+ {% endif %}
+
+ <h2>상품 목록</h2>
+ {% if products %}
+     <table>
+         <thead>
+             <tr>
+                 <th>ID</th>
+                 <th>Title</th>
+                 <th>Description</th>
+                 <th>Price</th>
+                 <th>Seller ID</th>
+                 <th>Created At</th>
+                 <th>Updated At</th>
+             </tr>
+         </thead>
+         <tbody>
+             {% for product in products %}
+                 <tr>
+                     <td>{{ product.id }}</td>
+                     <td>{{ product.title }}</td>
+                     <td>{{ product.description }}</td>
+                     <td>{{ product.price }}</td>
+                     <td>{{ product.seller_id }}</td>
+                     <td>{{ product.created_at }}</td>
+                     <td>{{ product.updated_at }}</td>
+                 </tr>
+             {% endfor %}
+         </tbody>
+     </table>
+ {% else %}
+     <p>상품이 없습니다.</p>
+ {% endif %}
+
+ <h2>신고 목록</h2>
+ {% if reports %}
+     <table>
+         <thead>
+             <tr>
+                 <th>ID</th>
+                 <th>Reporter ID</th>
+                 <th>Target ID</th>
+                 <th>Reason</th>
+                 <th>Report Type</th>
+                 <th>Created At</th>
+             </tr>
+         </thead>
+         <tbody>
+             {% for report in reports %}
+                 <tr>
+                     <td>{{ report.id }}</td>
+                     <td>{{ report.reporter_id }}</td>
+                     <td>{{ report.target_id }}</td>
+                     <td>{{ report.reason }}</td>
+                     <td>{{ report.report_type }}</td>
+                     <td>{{ report.created_at }}</td>
+                 </tr>
+             {% endfor %}
+         </tbody>
+     </table>
+ {% else %}
+     <p>신고 내역이 없습니다.</p>
+ {% endif %}
+
+ <a href="{{ url_for('dashboard') }}">대시보드로 돌아가기</a>
+</body>
+</html>
