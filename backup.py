@@ -1,5 +1,6 @@
 import sqlite3
 import uuid
+import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash, g
 from flask_socketio import SocketIO, send
 from werkzeug.security import generate_password_hash, check_password_hash  # 비밀번호 해싱
@@ -7,7 +8,7 @@ from functools import wraps  # 관리자 권한 확인을 위한 데코레이터
 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret!'
+app.config['SECRET_KEY'] = os.urandom(24)
 DATABASE = 'market.db'
 socketio = SocketIO(app)
 
@@ -25,7 +26,10 @@ def get_db():
 def close_connection(exception):
     db = getattr(g, '_database', None)
     if db is not None:
-        db.close()
+    	try:
+    		pass
+    	finally:
+        	db.close()
 
 
 # 테이블 생성 (최초 실행 시에만)
@@ -295,6 +299,23 @@ def report():
         report_type = request.form['report_type']  # 'user' or 'product' 인지 확인
         db = get_db()
         cursor = db.cursor()
+
+        if report_type == 'user':
+            cursor.execute("SELECT id FROM user WHERE id = ?", (target_id,))
+            target = cursor.fetchone()
+            if not target:
+                flash('존재하지 않는 사용자 ID입니다.')
+                return render_template('report.html')
+        elif report_type == 'product':
+            cursor.execute("SELECT id FROM product WHERE id = ?", (target_id,))
+            target = cursor.fetchone()
+            if not target:
+                flash('존재하지 않는 상품 ID입니다.')
+                return render_template('report.html')
+        else:
+            flash('잘못된 신고 유형입니다.')
+            return render_template('report.html')
+
         report_id = str(uuid.uuid4())
         cursor.execute(
             "INSERT INTO report (id, reporter_id, target_id, reason, report_type) VALUES (?, ?, ?, ?, ?)",
@@ -318,19 +339,46 @@ def search_product():
     return render_template('search_results.html', products=products, keyword=keyword)
 
 
+# 사용자 삭제 (관리자 권한 필요)
+@app.route('/admin/user/<user_id>/delete', methods=['POST'])
+@admin_required
+def admin_delete_user(user_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM user WHERE id = ?", (user_id,))
+    db.commit()
+    flash('사용자가 삭제되었습니다.')
+    return redirect(url_for('admin'))
+
+# 상품 삭제 (관리자 권한 필요)
+@app.route('/admin/product/<product_id>/delete', methods=['POST'])
+@admin_required
+def admin_delete_product(product_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM product WHERE id = ?", (product_id,))
+    db.commit()
+    flash('상품이 삭제되었습니다.')
+    return redirect(url_for('admin'))
+
 # 관리자 페이지
 @app.route('/admin')
 @admin_required  # 관리자 권한 데코레이터 적용
 def admin():
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT * FROM user")
-    users = cursor.fetchall()
-    cursor.execute("SELECT * FROM product")
-    products = cursor.fetchall()
-    cursor.execute("SELECT * FROM report")
-    reports = cursor.fetchall()
-    return render_template('admin.html', users=users, products=products, reports=reports)
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT id, username, is_admin FROM user")  # 필요한 정보만 선택
+        users = [dict(row) for row in cursor.fetchall()]  # 딕셔너리 형태로 변환
+        cursor.execute("SELECT id, title, price, seller_id FROM product")  # 필요한 정보만 선택
+        products = [dict(row) for row in cursor.fetchall()]  # 딕셔너리 형태로 변환
+        cursor.execute("SELECT id, reporter_id, target_id, reason, report_type FROM report")  # 필요한 정보만 선택
+        reports = [dict(row) for row in cursor.fetchall()]  # 딕셔너리 형태로 변환
+        return render_template('admin.html', users=users, products=products, reports=reports)
+    except Exception as e:
+        app.logger.error(f"Error in admin: {e}")
+        flash('관리자 페이지 접근 중 오류가 발생했습니다.')
+        return redirect(url_for('index'))
 
 
 # 실시간 채팅: 클라이언트가 메시지를 보내면 전체 브로드캐스트
@@ -342,4 +390,4 @@ def handle_send_message_event(data):
 
 if __name__ == '__main__':
     init_db()
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=False)

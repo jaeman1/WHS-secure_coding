@@ -5,4 +5,26 @@
 <p>{{ product.description }}</p>
 <p>가격: {{ product.price }}</p>
 <p>판매자: {{ seller.username if seller else '알 수 없음' }}</p>
+{% if 'user_id' in session and session['user_id'] == product.seller_id %}
+    <div style="margin-top: 20px;">
+      <a
+        href="{{ url_for('edit_product', product_id=product.id) }}"
+        style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; margin-right: 10px;"
+        >수정</a
+      >
+      <form
+        method="POST"
+        action="{{ url_for('delete_product', product_id=product.id) }}"
+        style="display: inline-block;"
+        onsubmit="return confirm('정말 삭제하시겠습니까?')"
+      >
+        <button
+          type="submit"
+          style="padding: 10px 20px; background-color: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;"
+        >
+          삭제
+        </button>
+      </form>
+    </div>
+  {% endif %}
 {% endblock %}
